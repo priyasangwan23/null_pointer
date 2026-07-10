@@ -1,4 +1,4 @@
-import { Coffee } from 'lucide-react';
+import { User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function ProfileCard({ name, status, score }) {
@@ -9,7 +9,7 @@ export default function ProfileCard({ name, status, score }) {
             className="bg-card border border-border rounded-2xl p-6 shadow-soft flex flex-col items-center text-center"
         >
             <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-card mb-4 relative">
-                <Coffee size={40} />
+                <User size={40} />
                 <div className="absolute bottom-1 right-1 w-5 h-5 bg-success rounded-full border-2 border-card" />
             </div>
             <h3 className="font-heading font-bold text-xl text-heading">{name}'s Clone</h3>
