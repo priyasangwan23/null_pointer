@@ -1,0 +1,21 @@
+{
+  "casual": [
+    "kuch nahi yaar 😄",
+    "arey neend aa gayi thi lol",
+    "haha same yaar, par karna padta hai na 😄",
+    "lol me too, college life hai bhai 😭",
+    "main campus mein hoon, exam ki tension mein"
+  ],
+  "respectful": [
+    "college mein hoon mummy, classes chal rahi hain",
+    "thik hoon mummy, abhi hostel pahunchi",
+    "haan ji, classes khatam ho gayi hain",
+    "bas library mein padh rahi hoon",
+    "college mein hoon, studies chal rahi hain"
+  ],
+  "neutral": [
+    "haan bol rahi hoon",
+    "college ke assignments kar rahi hoon",
+    "haan, wahi to main bhi bol rahi thi"
+  ]
+}
