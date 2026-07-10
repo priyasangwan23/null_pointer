@@ -1,16 +1,43 @@
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import ChartCard from '../components/ChartCard';
 import StatCard from '../components/StatCard';
-import { personalityData } from '../data/personality';
-import { MessageCircle, Brain, Smile, Globe } from 'lucide-react';
+import { fetchPersonality } from '../services/api';
+import { MessageCircle, Brain, Smile, Globe, Loader2 } from 'lucide-react';
+
+const colors = ['#C68E5D', '#6F4E37', '#4B3621', '#7A8F69', '#C38A62', '#9B7D6A'];
 
 export default function PersonalityDashboard() {
-    const {
-        score, communicationStyle, languages, emojiUsage, topWords, favoritePhrases
-    } = personalityData;
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const colors = ['#C68E5D', '#6F4E37', '#4B3621', '#7A8F69', '#C38A62'];
+    useEffect(() => {
+        fetchPersonality()
+            .then(setData)
+            .catch(() => setError('Could not load personality data. Make sure the backend is running.'))
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64 gap-3 text-body">
+                <Loader2 className="animate-spin" size={22} />
+                <span>Loading personality data...</span>
+            </div>
+        );
+    }
+
+    if (error || !data) {
+        return (
+            <div className="text-center py-16 text-red-400 bg-red-50 border border-red-200 rounded-2xl">
+                <p>{error || 'Something went wrong.'}</p>
+            </div>
+        );
+    }
+
+    const { score, communicationStyle, languages, emojiUsage, topWords, favoritePhrases, averageReplyLength } = data;
 
     return (
         <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
@@ -21,7 +48,7 @@ export default function PersonalityDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard label="Clone Accuracy Score" value={`${score}%`} icon={Brain} delay={0.1} />
-                <StatCard label="Avg. Reply Length" value={`${personalityData.averageReplyLength} w`} icon={MessageCircle} delay={0.2} />
+                <StatCard label="Avg. Reply Length" value={`${averageReplyLength} w`} icon={MessageCircle} delay={0.2} />
                 <div className="col-span-1 md:col-span-2 bg-primary text-card rounded-2xl p-6 shadow-soft border border-primary/20 flex flex-col justify-center">
                     <h3 className="text-sm font-medium text-card/80 mb-2 flex items-center gap-2">
                         <Smile size={18} /> Communication Style
@@ -94,6 +121,25 @@ export default function PersonalityDashboard() {
                     </motion.div>
                 </div>
             </div>
+
+            {/* Favorite Phrases */}
+            {favoritePhrases?.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="bg-card p-6 rounded-2xl border border-border shadow-soft"
+                >
+                    <h3 className="text-lg font-heading font-semibold text-heading mb-4">Favorite Phrases</h3>
+                    <div className="flex flex-wrap gap-3">
+                        {favoritePhrases.map((phrase, i) => (
+                            <span key={i} className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium border border-primary/20">
+                                "{phrase}"
+                            </span>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 }

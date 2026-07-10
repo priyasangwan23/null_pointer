@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, Lock, Moon, Sun, Bell, Globe } from 'lucide-react';
 import Button from '../components/Button';
 
@@ -6,6 +6,22 @@ export default function Settings() {
     const [theme, setTheme] = useState('light');
     const [notifications, setNotifications] = useState(true);
     const [privacyMode, setPrivacyMode] = useState(false);
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+    }, []);
+
+    const handleThemeChange = (e) => {
+        const newTheme = e.target.value;
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    };
 
     return (
         <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
@@ -27,7 +43,7 @@ export default function Settings() {
                         </div>
                         <select
                             value={theme}
-                            onChange={(e) => setTheme(e.target.value)}
+                            onChange={handleThemeChange}
                             className="bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent/50"
                         >
                             <option value="light">Light</option>

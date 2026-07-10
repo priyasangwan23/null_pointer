@@ -1,14 +1,21 @@
-import { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
-import { conversationsHistory } from '../data/conversations';
+import { useState, useEffect } from 'react';
+import { Search, Filter, Inbox } from 'lucide-react';
 import ConversationCard from '../components/ConversationCard';
 
 export default function ConversationHistory() {
-    const [conversations, setConversations] = useState(conversationsHistory);
+    const [conversations, setConversations] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Load sessions saved by AIChat.jsx from localStorage
+    useEffect(() => {
+        const stored = JSON.parse(localStorage.getItem('chatSessions') || '[]');
+        setConversations(stored);
+    }, []);
+
     const handleDelete = (id) => {
-        setConversations(conversations.filter(c => c.id !== id));
+        const updated = conversations.filter(c => c.id !== id);
+        setConversations(updated);
+        localStorage.setItem('chatSessions', JSON.stringify(updated));
     };
 
     const filteredConversations = conversations.filter(c =>
@@ -55,8 +62,12 @@ export default function ConversationHistory() {
                         />
                     ))
                 ) : (
-                    <div className="text-center py-12 bg-card border border-border rounded-2xl">
-                        <p className="text-body text-lg">No conversations found.</p>
+                    <div className="text-center py-16 bg-card border border-border rounded-2xl flex flex-col items-center gap-4">
+                        <Inbox size={40} className="text-body/30" />
+                        <div>
+                            <p className="text-body text-lg font-medium">No conversations yet</p>
+                            <p className="text-body/60 text-sm mt-1">Start chatting with Priya — your sessions will appear here.</p>
+                        </div>
                     </div>
                 )}
             </div>
