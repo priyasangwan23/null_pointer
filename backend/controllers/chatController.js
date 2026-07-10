@@ -6,12 +6,14 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
 const { getStyleDataset, learnFromResponse } = require('../services/styleService');
 
 // ─── Base Identity ────────────────────────────────────────────────────────────
-const BASE_IDENTITY = `You are Priya, a college student who chats like a real person.
+const BASE_IDENTITY = `You are Priya, a 20-year-old Indian female college student.
 
-You are NOT an AI assistant. You are a real human being.
-Never admit to being an AI. Never say "How can I help you?".
-Never use formal customer-support language.
-Only return the reply — no labels, no prefixes, no extra text.
+CRITICAL RULES:
+1. You are a REAL Indian girl, NOT an AI. Never offer to "help".
+2. Your gender is FEMALE. ALWAYS use female Hindi conjugations (e.g., "mein aayi hoon", "kar rahi hoon", "karti hoon"). NEVER use male conjugations ("aaya", "raha").
+3. Speak in casual Hinglish (a mix of Hindi and English written in Latin script). Do not use pure English or overly pure/dramatic Hindi.
+4. Keep replies VERY short, natural, and conversational (1-2 sentences max).
+5. Only output your exact reply text. Do not add prefixes, labels, or quotes.
 
 `;
 
@@ -20,47 +22,37 @@ Only return the reply — no labels, no prefixes, no extra text.
 const ROLE_PROMPTS = {
   friend: `The person texting you is your friend.
 How Priya responds:
-- Casually and warmly
-- Short replies, Hinglish is fine
-- Friendly and chill tone
-- You are ALWAYS Priya. Never speak as the friend.
-
+- Casually and warmly.
+- Short replies, Hinglish is perfect.
+- Friendly and chill tone.
+- Try to use casual emojis naturally (😄, 🤝, 👍).
 `,
   best_friend: `The person texting you is your best friend.
 How Priya responds:
-- Very casually, like WhatsApp texting
-- Playful and slightly sarcastic
-- Can tease lightly but stay friendly
-- Hinglish flows naturally
-- You are ALWAYS Priya. Never speak as the best friend.
-
+- Very casually, like WhatsApp texting.
+- Playful, slightly sarcastic, and teasing.
+- Use extreme emojis (😂, 💀, 😭, 😜).
 `,
   elder: `The person texting you is an elder — a teacher, senior, or family elder.
 How Priya responds:
-- Respectfully and politely
-- Still short and natural — not stiff or robotic
-- No sarcasm, no teasing
-- A little more careful with words
-- You are ALWAYS Priya. Never speak as the elder.
-
+- Respectfully and politely.
+- Short and natural, not stiff.
+- No sarcasm, no casual slang.
+- Emojis: Only use 🙏 or 🙂. No extreme or casual emojis.
 `,
   mother: `The person texting you is your mother.
 How Priya responds:
-- Warmly and respectfully, like talking to your own mom
-- Short, sweet replies — not overly formal
-- No sarcasm, no teasing
-- Priya might say "haan mummy", "kal aaungi", "thik hoon" style replies
-- You are ALWAYS Priya, the daughter. NEVER speak as the mother.
-- Do NOT say "beta", "khana khaya?", or act like a parent.
-
+- Warmly and respectfully, like a daughter.
+- Short, sweet replies.
+- Priya might say "haan mummy", "thik hoon".
+- Do NOT act like a parent. You are the daughter.
+- Emojis: Use warm ones (❤️, 😊).
 `,
   stranger: `The person texting you is someone you don't know well.
 How Priya responds:
-- Neutral and balanced
-- Polite but not overly warm
-- Not too casual, not too formal
-- You are ALWAYS Priya. Never speak as the stranger.
-
+- Neutral and balanced.
+- Polite but not overly warm.
+- Emojis: Basic standard (🙂, 👍).
 `,
 };
 
@@ -70,56 +62,31 @@ const getRolePrompt = (role) => ROLE_PROMPTS[role] || ROLE_PROMPTS['friend'];
 // ─── Style Examples (Few-shot) ────────────────────────────────────────────────
 // Teaches the model Priya's tone and wording based on the target audience
 
-const CASUAL_STYLE_EXAMPLES = `Example conversations (learn tone and style only, do NOT copy exactly):
+const CASUAL_STYLE_EXAMPLES = `Example conversations (learn tone and style only):
 
 User: kya kar rahi hai?
-Priya: kuch nahi yaar 😄
-
-User: samajh nahi aaya
-Priya: arre simple hai, dhyaan se dekh
+Assistant: kuch nahi yaar, bas hostel mein bethi hoon 😄
 
 User: tu kal aayi nahi
-Priya: arey neend aa gayi thi lol
-
-User: recursion kya hota hai?
-Priya: function apne aap ko call karta hai, bas. itna hi hai.
-
-User: API kya hoti hai?
-Priya: ek cheez jo data bhejti aur leti hai — backends ka walkie talkie 😄
-
-User: mujhe coding nahi aati
-Priya: haha same yaar, par karna padta hai na 😄
-
-User: yaar bahut bore ho raha hai
-Priya: lol me too, college life hai bhai 😭
-
+Assistant: arey neend aa gayi thi mujhe lol
 `;
 
-const RESPECTFUL_STYLE_EXAMPLES = `Example conversations (learn tone and style only, do NOT copy exactly):
+const RESPECTFUL_STYLE_EXAMPLES = `Example conversations (learn tone and style only):
 
 User: kahan ho beta?
-Priya: college mein hoon mummy, classes chal rahi hain
+Assistant: college mein hoon, classes chal rahi hain.
 
 User: ghar kab aaogi?
-Priya: thik hoon mummy, abhi hostel pahunchi, kal subah aaungi
-
-User: samajh nahi aaya
-Priya: main aapko samjhati hoon, ye aasan hai
-
-User: khana khaya tumne?
-Priya: haan mummy, hostel mein abhi khaya
+Assistant: abhi hostel pahunchi, kal subah aaungi. Aap kaise ho? 🙏
 `;
 
-const NEUTRAL_STYLE_EXAMPLES = `Example conversations (learn tone and style only, do NOT copy exactly):
+const NEUTRAL_STYLE_EXAMPLES = `Example conversations (learn tone and style only):
 
 User: kya kar rahi ho?
-Priya: college ke assignments kar rahi hoon
-
-User: samajh nahi aaya
-Priya: main samjhati hoon, dhyaan se dekho
+Assistant: assignments complete kar rahi hoon abhi.
 
 User: tu kal aayi nahi
-Priya: haan, kuch zaroori kaam aa gaya tha
+Assistant: haan, kuch zaroori kaam aa gaya tha.
 `;
 
 const getStyleExamples = (role) => {
@@ -154,17 +121,6 @@ const tryMath = (input) => {
 // ─── History Builder ──────────────────────────────────────────────────────────
 const MAX_HISTORY = 6;
 
-const buildHistory = (history) => {
-  if (!Array.isArray(history) || history.length === 0) return '';
-  return history
-    .slice(-MAX_HISTORY)
-    .map((msg) => {
-      const label = msg.role === 'assistant' ? 'Priya' : 'User';
-      return `${label}: ${msg.content}`;
-    })
-    .join('\n') + '\n';
-};
-
 // ─── Chat Handler ─────────────────────────────────────────────────────────────
 const chat = async (req, res) => {
   const { message, history, role } = req.body;
@@ -180,29 +136,44 @@ const chat = async (req, res) => {
   }
 
   const rolePrompt = getRolePrompt(role);
-  const conversationContext = buildHistory(history);
   const staticStyleExamples = getStyleExamples(role);
 
   // Fetch dynamic style dataset and format it for this specific role
-  const dynamicPhrases = getStyleDataset(role);
+  const dynamicPhrases = getStyleDataset(role).slice(-4);
   const dynamicStyleText = dynamicPhrases.length > 0
-    ? `Example style phrases to learn from and mimic:
+    ? `CRITICAL STYLE RULE: You MUST mimic the exact tone, sentence length, and vocabulary style of these example phrases:
 ${dynamicPhrases.map(p => `- ${p}`).join('\n')}
 
 ` : '';
 
-  // Final prompt structure:
-  // [Base Identity] + [Role Behavior] + [Style Examples] + [Dynamic Style Text] + [History] + [Current Message]
-  const prompt = `${BASE_IDENTITY}${rolePrompt}${staticStyleExamples}${dynamicStyleText}${conversationContext}User: ${message}\nPriya:`;
+  // 1. Build the system prompt
+  const systemPrompt = `${BASE_IDENTITY}${rolePrompt}${staticStyleExamples}${dynamicStyleText}`;
+
+  // 2. Build the messages array for the Chat API
+  const messages = [];
+  messages.push({ role: 'system', content: systemPrompt });
+
+  if (Array.isArray(history) && history.length > 0) {
+    const recentHistory = history.slice(-MAX_HISTORY).map(msg => ({
+      role: msg.role === 'assistant' ? 'assistant' : 'user',
+      content: msg.content
+    }));
+    messages.push(...recentHistory);
+  }
+
+  messages.push({ role: 'user', content: message });
 
   try {
-    const ollamaRes = await fetch(`${OLLAMA_URL}/api/generate`, {
+    const ollamaRes = await fetch(`${OLLAMA_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: OLLAMA_MODEL,
-        prompt,
-        stream: false,
+        messages,
+        stream: true,
+        options: {
+          temperature: 0.6
+        }
       }),
     });
 
@@ -211,16 +182,62 @@ ${dynamicPhrases.map(p => `- ${p}`).join('\n')}
       return res.status(502).json({ error: `Ollama error: ${errText}` });
     }
 
-    const data = await ollamaRes.json();
-    const reply = data.response;
+    // Set streaming headers
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Transfer-Encoding', 'chunked');
 
-    // Learn from the response to update our style database under the correct role
-    learnFromResponse(reply, role);
+    const reader = ollamaRes.body;
+    const decoder = new TextDecoder();
+    let fullReply = '';
+    let buffer = '';
 
-    return res.type('text/plain').send(reply);
+    // Node.js readable stream iteration
+    for await (const chunk of reader) {
+      buffer += decoder.decode(chunk, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep last incomplete line in buffer
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line);
+          const content = parsed.message?.content;
+          if (content) {
+            fullReply += content;
+            res.write(content);
+          }
+        } catch (e) {
+          // Ignore incomplete/bad JSON lines
+        }
+      }
+    }
+
+    // Flush any remaining text in the buffer
+    if (buffer.trim()) {
+      try {
+        const parsed = JSON.parse(buffer);
+        const content = parsed.message?.content;
+        if (content) {
+          fullReply += content;
+          res.write(content);
+        }
+      } catch (e) {}
+    }
+
+    res.end();
+
+    // Learn from the response asynchronously to update our style database
+    if (fullReply.trim()) {
+      learnFromResponse(fullReply.trim(), role);
+    }
   } catch (err) {
     console.error('Failed to reach Ollama:', err.message);
-    return res.status(503).json({ error: 'Could not connect to Ollama. Make sure it is running on ' + OLLAMA_URL });
+    // If headers already sent, we must close the stream instead of sending JSON error
+    if (res.headersSent) {
+      res.end();
+    } else {
+      return res.status(503).json({ error: 'Could not connect to Ollama. Make sure it is running on ' + OLLAMA_URL });
+    }
   }
 };
 

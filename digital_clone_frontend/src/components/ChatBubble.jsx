@@ -7,13 +7,13 @@ export default function ChatBubble({ message, isAI, timestamp }) {
             animate={{ opacity: 1, y: 0 }}
             className={`flex w-full ${isAI ? 'justify-start' : 'justify-end'} mb-4`}
         >
-            <div className={`max-w-[75%] rounded-2xl p-4 ${isAI
-                    ? 'bg-card border border-border text-heading shadow-sm rounded-tl-none'
-                    : 'bg-primary text-card rounded-tr-none'
+            <div className={`max-w-[75%] rounded-[18px] p-3.5 px-4 shadow-sm ${isAI
+                    ? 'bg-card border border-border text-heading rounded-tl-sm'
+                    : 'bg-primary text-card rounded-tr-sm border border-primary/20'
                 }`}>
-                <p className="whitespace-pre-wrap">{message}</p>
+                <p className="whitespace-pre-wrap leading-relaxed text-[14px]">{message}</p>
                 {timestamp && (
-                    <span className={`text-xs mt-2 block ${isAI ? 'text-body text-left' : 'text-card/70 text-right'}`}>
+                    <span className={`text-[10px] mt-1.5 block font-medium uppercase tracking-wider ${isAI ? 'text-body/60 text-left' : 'text-card/70 text-right'}`}>
                         {timestamp}
                     </span>
                 )}

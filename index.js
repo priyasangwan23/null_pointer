@@ -1,8 +1,5 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { chat } = require('./controllers/chatController');
-const { getPersonality } = require('./controllers/personalityController');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,8 +12,6 @@ app.use(express.json());
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is working' });
 });
-app.post('/api/chat', chat);
-app.get('/api/personality', getPersonality);
 
 // Start Server
 app.listen(PORT, () => {
