@@ -1,8 +1,7 @@
 // controllers/chatController.js
 // Role-based AI system with style learning and short-term memory
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
+const { generateChatStream } = require('../services/geminiService');
 const { getStyleDataset, learnFromResponse } = require('../services/styleService');
 
 // ─── Base Identity ────────────────────────────────────────────────────────────
@@ -164,79 +163,37 @@ ${dynamicPhrases.map(p => `- ${p}`).join('\n')}
   messages.push({ role: 'user', content: message });
 
   try {
-    const ollamaRes = await fetch(`${OLLAMA_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        messages,
-        stream: true,
-        options: {
-          temperature: 0.6
-        }
-      }),
-    });
-
-    if (!ollamaRes.ok) {
-      const errText = await ollamaRes.text();
-      return res.status(502).json({ error: `Ollama error: ${errText}` });
-    }
-
-    // Set streaming headers
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Transfer-Encoding', 'chunked');
-
-    const reader = ollamaRes.body;
-    const decoder = new TextDecoder();
     let fullReply = '';
-    let buffer = '';
+    let headersSent = false;
+    const chunkStream = generateChatStream(message, history, systemPrompt);
 
-    // Node.js readable stream iteration
-    for await (const chunk of reader) {
-      buffer += decoder.decode(chunk, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep last incomplete line in buffer
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const parsed = JSON.parse(line);
-          const content = parsed.message?.content;
-          if (content) {
-            fullReply += content;
-            res.write(content);
-          }
-        } catch (e) {
-          // Ignore incomplete/bad JSON lines
-        }
+    for await (const chunk of chunkStream) {
+      if (!headersSent) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        headersSent = true;
       }
+      fullReply += chunk;
+      res.write(chunk);
     }
 
-    // Flush any remaining text in the buffer
-    if (buffer.trim()) {
-      try {
-        const parsed = JSON.parse(buffer);
-        const content = parsed.message?.content;
-        if (content) {
-          fullReply += content;
-          res.write(content);
-        }
-      } catch (e) {}
+    if (headersSent) {
+      res.end();
+    } else {
+      // If no chunks were written, send 204 or fallback
+      res.status(204).end();
     }
-
-    res.end();
 
     // Learn from the response asynchronously to update our style database
     if (fullReply.trim()) {
       learnFromResponse(fullReply.trim(), role);
     }
   } catch (err) {
-    console.error('Failed to reach Ollama:', err.message);
-    // If headers already sent, we must close the stream instead of sending JSON error
+    console.error('Failed to generate chat response with Gemini:', err.message);
     if (res.headersSent) {
       res.end();
     } else {
-      return res.status(503).json({ error: 'Could not connect to Ollama. Make sure it is running on ' + OLLAMA_URL });
+      res.status(503).json({ error: 'Gemini service failed: ' + err.message });
     }
   }
 };

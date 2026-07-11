@@ -1,0 +1,12 @@
+◇ injected env (2) from .env // tip: ⌘ override existing { override: true }
+Server is running on port 5000
+[2026-07-11T01:21:12.779Z] GET /api/test
+[2026-07-11T01:21:29.417Z] POST /api/upload-chat
+Request Body: {}
+Error in uploadChat: learnFromUpload is not a function
+[2026-07-11T01:22:36.789Z] POST /api/upload-chat
+Request Body: {}
+Error in uploadChat: learnFromUpload is not a function
+[2026-07-11T01:22:54.847Z] POST /api/upload-chat
+Request Body: {}
+Error in uploadChat: learnFromUpload is not a function

@@ -50,7 +50,6 @@ export default function UploadCard({ onUpload }) {
             >
                 <input
                     type="file"
-                    accept=".json,.txt,.csv"
                     className="hidden"
                     id="file-upload"
                     onChange={handleChange}

@@ -76,7 +76,7 @@ const learnFromResponse = (response, role) => {
     const data = fs.readFileSync(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
     const category = getCategoryForRole(role);
-    
+
     if (!parsed[category]) {
       parsed[category] = [];
     }
@@ -93,9 +93,9 @@ const learnFromResponse = (response, role) => {
 
     for (const candidate of candidates) {
       if (
-        candidate.includes('{') || 
-        candidate.includes('}') || 
-        candidate.includes('<') || 
+        candidate.includes('{') ||
+        candidate.includes('}') ||
+        candidate.includes('<') ||
         candidate.includes('>') ||
         candidate.startsWith('#') ||
         candidate.startsWith('-') ||
@@ -126,7 +126,57 @@ const learnFromResponse = (response, role) => {
   }
 };
 
+/**
+ * Learn writing style from an array of messages extracted from an uploaded chat.
+ * Unlike learnFromResponse (which processes one AI reply), this accepts many
+ * human-written messages directly — giving higher fidelity style data.
+ * @param {string[]} phrases - Array of message strings from the WhatsApp export
+ * @param {'casual'|'respectful'|'neutral'} category - Which bucket to update
+ * @returns {{ added: number, total: number }}
+ */
+const learnFromUpload = (phrases, category = 'casual') => {
+  try {
+    initDataset();
+    const data = fs.readFileSync(DATA_FILE, 'utf-8');
+    const parsed = JSON.parse(data);
+
+    if (!parsed[category]) parsed[category] = [];
+    const dataset = parsed[category];
+    let added = 0;
+
+    for (const phrase of phrases) {
+      const trimmed = phrase.trim();
+      // Filter out very short/long messages and those with code/markdown
+      if (trimmed.length < 5 || trimmed.length > 120) continue;
+      if (trimmed.includes('{') || trimmed.includes('<') || trimmed.startsWith('#')) continue;
+
+      const lowerPhrase = trimmed.toLowerCase();
+      const isDuplicate = dataset.some(existing => existing.toLowerCase() === lowerPhrase);
+
+      if (!isDuplicate) {
+        dataset.push(trimmed);
+        added++;
+      }
+    }
+
+    // Uploads are higher quality signal — allow up to 50 entries per category
+    const MAX_UPLOAD_PHRASES = 50;
+    if (dataset.length > MAX_UPLOAD_PHRASES) {
+      dataset.splice(0, dataset.length - MAX_UPLOAD_PHRASES);
+    }
+
+    fs.writeFileSync(DATA_FILE, JSON.stringify(parsed, null, 2), 'utf-8');
+    console.log(`[styleService] learnFromUpload: added ${added} new phrases to '${category}'.`);
+    return { added, total: dataset.length };
+  } catch (err) {
+    console.error('Error in learnFromUpload:', err.message);
+    return { added: 0, total: 0 };
+  }
+};
+
+
 module.exports = {
   getStyleDataset,
-  learnFromResponse
+  learnFromResponse,
+  learnFromUpload
 };

@@ -10,7 +10,7 @@ const BASE_URL = 'http://localhost:5000';
  * @param {string} role - Relationship role: friend|best_friend|mother|elder|stranger
  * @returns {Promise<string>} Priya's reply text
  */
-export async function sendMessage(message, history = [], role = 'friend', onChunk = () => {}) {
+export async function sendMessage(message, history = [], role = 'friend', onChunk = () => { }) {
   const res = await fetch(`${BASE_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -57,4 +57,30 @@ export async function checkBackendHealth() {
   } catch {
     return false;
   }
+}
+
+/**
+ * Upload a WhatsApp chat export to analyze and learn the user's style
+ * @param {File} file - The .txt chat export file
+ * @param {string} senderName - (optional) Name of the sender to extract messages for
+ * @param {string} category - (optional) 'casual', 'respectful', or 'neutral'
+ * @returns {Promise<Object>} API response with stats
+ */
+export async function uploadChat(file, senderName = '', category = 'casual') {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (senderName) formData.append('senderName', senderName);
+  formData.append('category', category);
+
+  const res = await fetch(`${BASE_URL}/api/upload-chat`, {
+    method: 'POST',
+    body: formData, // fetch sets the appropriate multipart/form-data headers automatically
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || `Backend error: ${res.status}`);
+  }
+
+  return data;
 }
