@@ -2,6 +2,8 @@
 // Handles WhatsApp chat file uploads, parses them, and updates the style dataset.
 
 const fs = require('fs');
+const path = require('path');
+const unzipper = require('unzipper'); // npm i unzipper
 const { parseWhatsAppChat, extractSenderMessages } = require('../services/chatParser');
 const { learnFromUpload } = require('../services/styleService');
 
@@ -18,8 +20,20 @@ const uploadChat = async (req, res) => {
     }
 
     try {
-        // Read the temp file written by multer
-        const fileContent = fs.readFileSync(req.file.path, 'utf-8');
+        // Determine file type and read content
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        let fileContent;
+        if (ext === '.zip') {
+            // Unzip in memory and extract first .txt file
+            const directory = await unzipper.Open.buffer(fs.readFileSync(req.file.path));
+            const txtEntry = directory.files.find(f => path.extname(f.path).toLowerCase() === '.txt');
+            if (!txtEntry) {
+                return res.status(422).json({ error: 'ZIP does not contain a .txt WhatsApp export.' });
+            }
+            fileContent = (await txtEntry.buffer()).toString('utf-8');
+        } else {
+            fileContent = fs.readFileSync(req.file.path, 'utf-8');
+        }
 
         // Parse the chat
         const { messages, senders } = parseWhatsAppChat(fileContent);
@@ -59,8 +73,39 @@ const uploadChat = async (req, res) => {
         // Learn from the extracted messages
         const { added, total } = learnFromUpload(extractedPhrases, category);
 
+        // Run automatic relationship analysis on a sample of the conversation
+        let analysis = null;
+        try {
+            const { analyzeRelationship } = require('../services/relationshipAnalyzer');
+            const RelationshipProfile = require('../models/RelationshipProfile');
+            const mongoose = require('mongoose');
+
+            // Take the first 100 messages as context for Gemini to analyze the dialogue flow
+            const sampleMessages = messages.slice(0, 100);
+            analysis = await analyzeRelationship(sampleMessages);
+
+            if (mongoose.connection.readyState === 1) {
+                const profile = new RelationshipProfile({
+                    relationship: analysis.relationship,
+                    confidence: analysis.confidence,
+                    communicationStyle: analysis.communicationStyle
+                });
+                await profile.save();
+                console.log(`[uploadController] Saved relationship profile to MongoDB: ${analysis.relationship}`);
+            } else {
+                console.log('[uploadController] MongoDB not connected, skipping profile database save.');
+            }
+        } catch (analysisErr) {
+            console.error('[uploadController] Failed to analyze relationship from upload:', analysisErr.message);
+        }
+
         // Clean up the temp file
         try { fs.unlinkSync(req.file.path); } catch (_) { /* ignore cleanup errors */ }
+
+        // Build customized success message
+        const responseMessage = analysis
+            ? `✅ Learned ${added} new phrases. Automatically detected relationship: ${analysis.relationship} (confidence: ${(analysis.confidence * 100).toFixed(0)}%). Style dataset now has ${total} entries.`
+            : `✅ Learned ${added} new phrases from ${extractedPhrases.length} messages. Style dataset now has ${total} entries.`;
 
         return res.json({
             success: true,
@@ -70,7 +115,10 @@ const uploadChat = async (req, res) => {
             added,
             total,
             category,
-            message: `✅ Learned ${added} new phrases from ${extractedPhrases.length} messages. Style dataset now has ${total} entries.`
+            relationship: analysis ? analysis.relationship : null,
+            confidence: analysis ? analysis.confidence : null,
+            communicationStyle: analysis ? analysis.communicationStyle : null,
+            message: responseMessage
         });
     } catch (err) {
         console.error('Error in uploadChat:', err.message);
