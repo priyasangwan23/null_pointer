@@ -70,5 +70,6 @@ async function* generateChatStream(message, history, systemPrompt) {
 }
 
 module.exports = {
-    generateChatStream
+    generateChatStream,
+    getAIClient
 };

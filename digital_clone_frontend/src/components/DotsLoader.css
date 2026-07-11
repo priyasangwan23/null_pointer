@@ -1,0 +1,24 @@
+/* DotsLoader.css – simple animated loading dots */
+.dots-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dot {
+    border-radius: 50%;
+    animation: bounce 1s infinite ease-in-out;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}

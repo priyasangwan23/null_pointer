@@ -134,21 +134,82 @@ const chat = async (req, res) => {
     return res.type('text/plain').send(mathReply);
   }
 
-  const rolePrompt = getRolePrompt(role);
-  const staticStyleExamples = getStyleExamples(role);
+  let activeRelationship = 'Friend';
+  let activeMappedRole = 'friend';
+  let systemPrompt = '';
 
-  // Fetch dynamic style dataset and format it for this specific role
-  const dynamicPhrases = getStyleDataset(role).slice(-4);
-  const dynamicStyleText = dynamicPhrases.length > 0
-    ? `CRITICAL STYLE RULE: You MUST mimic the exact tone, sentence length, and vocabulary style of these example phrases:
+  // 1. Fetch the latest detected RelationshipProfile from MongoDB
+  let savedProfile = null;
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const RelationshipProfile = require('../models/RelationshipProfile');
+      savedProfile = await RelationshipProfile.findOne().sort({ detectedAt: -1 });
+    } catch (dbErr) {
+      console.error('[chatController] Error fetching relationship profile from DB:', dbErr.message);
+    }
+  }
+
+  if (savedProfile) {
+    activeRelationship = savedProfile.relationship;
+    activeMappedRole = savedProfile.getMappedRole();
+
+    const style = savedProfile.communicationStyle || {};
+
+    // 2. Load previous dynamic reply examples matching mapped category
+    const dynamicPhrases = getStyleDataset(activeMappedRole).slice(-4);
+    // Combine dynamic ones with Gemini extracted common phrases
+    const extractedPhrases = style.commonPhrases || [];
+    const allStylePhrases = [...extractedPhrases.slice(-3), ...dynamicPhrases];
+
+    const dynamicStyleText = allStylePhrases.length > 0
+      ? `CRITICAL STYLE RULE: You MUST mimic the exact tone, sentence length, and vocabulary style of these example phrases:
+${allStylePhrases.map(p => `- ${p}`).join('\n')}
+
+`     : '';
+
+    // 3. Build dynamic prompt based on relationship and communication style attributes
+    const promptDetails = `The person texting you is your ${activeRelationship}.
+How Priya responds:
+- Tone: ${style.tone || 'Casual'}
+- Formality level: ${style.formality || 'Informal'}
+- Emotional Closeness: ${style.emotionalCloseness || 'Warm'}
+- Respect Level: ${style.respectLevel || 'Polite'}
+- Humor: ${style.humor || 'Playful'}
+- Emoji Usage: ${style.emojiUsage || 'Casual'}
+- Reply Length: ${style.replyLength || 'Short'}
+- Positivity: ${style.positivity || 'Friendly'}
+- Greeting Style: ${style.greetingStyle || 'Casual'}
+- Farewell Style: ${style.farewellStyle || 'Warm'}
+`;
+
+    const getStyleExamplesForMapped = (mapped) => {
+      if (mapped === 'elder') return RESPECTFUL_STYLE_EXAMPLES;
+      if (mapped === 'stranger') return NEUTRAL_STYLE_EXAMPLES;
+      return CASUAL_STYLE_EXAMPLES;
+    };
+
+    const staticStyleExamples = getStyleExamplesForMapped(activeMappedRole);
+    systemPrompt = `${BASE_IDENTITY}${promptDetails}${staticStyleExamples}${dynamicStyleText}`;
+    console.log(`[chatController] Prompts dynamically adjusted for automatically detected relationship: ${activeRelationship}`);
+  } else {
+    // Fallback: use manual client role parameter
+    const rolePrompt = getRolePrompt(role);
+    const staticStyleExamples = getStyleExamples(role);
+
+    // Fetch dynamic style dataset and format it for this specific role
+    const dynamicPhrases = getStyleDataset(role).slice(-4);
+    const dynamicStyleText = dynamicPhrases.length > 0
+      ? `CRITICAL STYLE RULE: You MUST mimic the exact tone, sentence length, and vocabulary style of these example phrases:
 ${dynamicPhrases.map(p => `- ${p}`).join('\n')}
 
 ` : '';
 
-  // 1. Build the system prompt
-  const systemPrompt = `${BASE_IDENTITY}${rolePrompt}${staticStyleExamples}${dynamicStyleText}`;
+    systemPrompt = `${BASE_IDENTITY}${rolePrompt}${staticStyleExamples}${dynamicStyleText}`;
+    activeMappedRole = role || 'friend';
+  }
 
-  // 2. Build the messages array for the Chat API
+  // 4. Build the messages array for the Chat API
   const messages = [];
   messages.push({ role: 'system', content: systemPrompt });
 
@@ -186,7 +247,7 @@ ${dynamicPhrases.map(p => `- ${p}`).join('\n')}
 
     // Learn from the response asynchronously to update our style database
     if (fullReply.trim()) {
-      learnFromResponse(fullReply.trim(), role);
+      learnFromResponse(fullReply.trim(), activeMappedRole);
     }
   } catch (err) {
     console.error('Failed to generate chat response with Gemini:', err.message);

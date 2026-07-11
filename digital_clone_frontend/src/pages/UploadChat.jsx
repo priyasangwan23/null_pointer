@@ -4,7 +4,8 @@ import UploadCard from '../components/UploadCard';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { uploadChat } from '../services/api';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import Loader from '../components/Loader';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function UploadChat() {
     const navigate = useNavigate();
@@ -54,7 +55,7 @@ export default function UploadChat() {
 
                 {isUploading && (
                     <div className="w-full py-12 flex flex-col items-center justify-center gap-4 bg-card rounded-2xl border border-border">
-                        <Loader2 className="animate-spin text-primary w-12 h-12" />
+                        <Loader size={48} color="#4B3621" />
                         <h3 className="text-lg font-heading font-semibold text-heading">Analyzing chat...</h3>
                         <p className="text-body text-sm text-center max-w-xs">Reading file and parsing your message style. This may take a moment.</p>
                     </div>
