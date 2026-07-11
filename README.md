@@ -1,264 +1,313 @@
-<p align="center">
+# ☕ Digital Clone
 
-# 🤖 DIGITAL CLONE
+> **An AI-powered Digital Clone that learns your communication style from exported chat history and responds just like you.**
 
-### *Your Communication. Your Personality. Your AI.*
-
-<img src="assets/banner.png" width="100%">
-
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![Node](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
-![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)
-![Gemini](https://img.shields.io/badge/AI-Gemini-red)
-![Hackathon](https://img.shields.io/badge/Hackathon-Project-orange)
-
-</p>
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js)
+![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb)
+![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?logo=google)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-# ✨ Overview
+## 📖 Overview
 
-Digital Clone is an AI-powered platform that learns how **YOU** communicate.
+Digital Clone is an AI-powered conversational assistant that **mimics a person's communication style** by analyzing exported chat history.
 
-Upload your chat history, and the system analyzes:
-
-- 💬 Communication Style
-- 😊 Personality
-- 😂 Emoji Usage
-- 🧠 Vocabulary
-- ⚡ Reply Pattern
-- ❤️ Emotional Tone
-
-Then it creates an AI clone capable of replying exactly like you.
+Instead of simply answering questions, the system understands how a person communicates—their tone, reply length, emoji usage, language preference, and conversational habits—and generates responses that closely resemble that person's messaging style.
 
 ---
 
-# 🎥 Demo
+## ✨ Features
 
-<p align="center">
-
-<img src="assets/demo.gif" width="900">
-
-</p>
-
----
-
-# 🚀 Features
-
-| Feature | Status |
-|---------|:------:|
-| Upload Chat History | ✅ |
-| Personality Analysis | ✅ |
-| AI Chat Clone | ✅ |
-| Communication Dashboard | ✅ |
-| Conversation History | ✅ |
-| Modern UI | ✅ |
+- 📂 Upload exported WhatsApp chat (.txt)
+- 🤖 AI-powered personality analysis using Google Gemini
+- 💬 Mimics real communication style
+- 😊 Detects emoji usage and tone
+- 🌍 Supports multilingual conversations
+- 🧠 Identifies communication patterns
+- 📊 Generates a personality profile
+- 💾 Stores analyzed data in MongoDB
+- ⚡ Real-time AI chat
+- 🎨 Modern Coffee-themed UI
+- 📱 Responsive Design
 
 ---
 
-# 🧠 How It Works
+## 🚀 How It Works
 
-<img src="assets/workflow.png">
-
-```
+```text
+Export WhatsApp Chat (.txt)
+            │
+            ▼
 Upload Chat
-      │
-      ▼
+            │
+            ▼
 Parse Messages
-      │
-      ▼
-AI Personality Analysis
-      │
-      ▼
-MongoDB
-      │
-      ▼
-Generate AI Clone
-      │
-      ▼
-Chat Like You
+            │
+            ▼
+Extract Conversation Patterns
+            │
+            ▼
+Analyze Personality (Gemini)
+            │
+            ▼
+Generate Personality Profile
+            │
+            ▼
+Store in MongoDB
+            │
+            ▼
+AI Responds Like You
 ```
 
 ---
 
-# 🖥 Screens
+## 🧠 AI Pipeline
 
-<table>
-<tr>
+### Step 1
+User exports a WhatsApp conversation.
 
-<td align="center">
+↓
 
-Landing Page
+### Step 2
+The exported `.txt` file is uploaded.
 
-<img src="assets/landing.png">
+↓
 
-</td>
+### Step 3
+Backend parses the conversation.
 
-<td align="center">
+↓
 
-Dashboard
+### Step 4
+Incoming messages and user replies are extracted.
 
-<img src="assets/dashboard.png">
+↓
 
-</td>
+### Step 5
+Google Gemini analyzes:
 
-</tr>
+- Communication tone
+- Reply style
+- Emoji usage
+- Formality
+- Language
+- Common phrases
+- Conversation habits
 
-<tr>
+↓
 
-<td align="center">
+### Step 6
+The personality profile is stored in MongoDB.
 
-Personality Report
+↓
 
-<img src="assets/personality.png">
+### Step 7
+Whenever a new message is received, the AI combines:
 
-</td>
+- Personality Profile
+- Previous Reply Examples
+- Current User Message
 
-<td align="center">
-
-AI Chat
-
-<img src="assets/chat.png">
-
-</td>
-
-</tr>
-
-</table>
-
----
-
-# 🧠 Personality Analysis
-
-Our AI extracts
-
-✅ Communication Tone
-
-✅ Writing Style
-
-✅ Frequently Used Words
-
-✅ Emoji Usage
-
-✅ Vocabulary
-
-✅ Response Length
-
-✅ Emotional Tone
+to generate a response that closely matches the user's natural communication style.
 
 ---
 
-# 💬 AI Clone
+## 📂 Project Structure
 
 ```
-👤 User
+Digital Clone
 
-How are you?
-
---------------------------
-
-🤖 Digital Clone
-
-Doing great bro 😂
-What's up?
-```
-
----
-
-# ⚙ Tech Stack
-
-<p align="center">
-
-<img src="https://skillicons.dev/icons?i=react,nodejs,express,mongodb,git,github,vscode"/>
-
-</p>
-
----
-
-# 📂 Folder Structure
-
-```
-backend/
+├── frontend
+│   ├── React
+│   ├── Vite
+│   ├── Tailwind CSS
+│   └── Components
 │
-├── config
-├── controllers
-├── routes
-├── services
-├── middleware
-├── models
-└── uploads
-
-frontend/
+├── backend
+│   ├── Express
+│   ├── Gemini API
+│   ├── MongoDB
+│   ├── File Parser
+│   ├── Personality Analyzer
+│   └── REST APIs
 │
-├── pages
-├── components
-├── assets
-└── hooks
+└── Database
+    ├── Personality
+    ├── Chat History
+    └── Training Data
 ```
 
 ---
 
-# 🔥 AI Pipeline
+## 🛠 Tech Stack
+
+### Frontend
+
+- React.js
+- Vite
+- Tailwind CSS
+- Axios
+- React Router
+
+### Backend
+
+- Node.js
+- Express.js
+- Google Gemini API
+- Multer
+- JWT Authentication
+
+### Database
+
+- MongoDB
+- Mongoose
+
+---
+
+## 📊 Personality Analysis
+
+Digital Clone automatically analyzes:
+
+- Communication Tone
+- Emoji Usage
+- Language Preference
+- Reply Length
+- Humor Level
+- Formality
+- Greeting Style
+- Common Words
+- Frequently Used Phrases
+- Conversation Behaviour
+
+---
+
+## 📸 Screenshots
+
+> Add project screenshots here.
 
 ```
-Chat History
+/screenshots
 
-↓
+dashboard.png
 
-Parser
+chat.png
 
-↓
+upload.png
 
-AI Analysis
-
-↓
-
-Personality Profile
-
-↓
-
-Prompt Builder
-
-↓
-
-Gemini
-
-↓
-
-Clone Response
+personality.png
 ```
 
 ---
 
-# 📊 Architecture
+## ⚙ Installation
 
-<img src="assets/architecture.png">
+### Clone Repository
 
----
+```bash
+git clone https://github.com/username/digital-clone.git
 
-# 🌟 Future Scope
-
-- 🎤 Voice Clone
-- 📞 Call Clone
-- 🎥 Video Avatar
-- 🌍 Multi-language
-- 🧠 Long-Term Memory
-- 🖥 Offline AI (Ollama)
-- 📄 PDF Reports
+cd digital-clone
+```
 
 ---
 
-# 👨‍💻 Team
+### Backend
 
-| Name | Role |
-|------|------|
-| Member 1 | Backend |
-| Member 2 | Frontend |
-| Member 3 | AI |
-| Member 4 | UI/UX |
+```bash
+cd backend
+
+npm install
+
+npm run dev
+```
 
 ---
 
-# ⭐ If you like this project
+### Frontend
 
-Leave a ⭐ on GitHub!
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+---
+
+## 🔑 Environment Variables
+
+Create `.env`
+
+```env
+PORT=5000
+
+MONGODB_URI=your_mongodb_connection
+
+GEMINI_API_KEY=your_api_key
+
+JWT_SECRET=your_secret
+```
+
+---
+
+## 🎯 Future Improvements
+
+- Telegram Integration
+- WhatsApp Cloud API
+- Email Conversation Analysis
+- Voice Cloning
+- Face Avatar
+- RAG-based Memory
+- Multi-user Profiles
+- Smart Context Retrieval
+- Deployment Support
+- Multi-language Translation
+
+---
+
+## 🌟 Why Digital Clone?
+
+Unlike a traditional chatbot, Digital Clone focuses on **how a person communicates**, not just **what they communicate**.
+
+It learns:
+
+- Writing style
+- Conversation habits
+- Emotional tone
+- Response behavior
+
+making conversations feel significantly more personal and realistic.
+
+---
+
+## 👩‍💻 Author
+
+**Nandini Prajapati**
+
+Backend Developer | Full Stack Developer
+
+GitHub: https://github.com/yourusername
+
+LinkedIn: https://linkedin.com/in/yourprofile
+
+---
+
+## ⭐ Support
+
+If you like this project,
+
+⭐ Star this repository
+
+🍴 Fork it
+
+🤝 Contribute
+
+and feel free to open Issues or Pull Requests.
+
+---
+
+Made with ❤️ using React, Node.js, MongoDB & Google Gemini
